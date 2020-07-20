@@ -47,7 +47,14 @@ def create_user():
     if username_check is not None:
       return jsonify("Username Taken")
     else:
+      hashed_password = bcrypt.generate_password_hash(password).decode("utf8")
+
+      record = User(username, hashed_password)
+      db.session.add(record)
+      db.session.commit()
       return jsonify("Successful")
+
+
 
 @app.route("/user/get", methods=["GET"])
 def get_all_users():
@@ -59,23 +66,27 @@ def get_user_by_id(id):
     user = db.session.query(User).filter(User.id == id).first()
     return jsonify(user_schema.dump(user))
 
-# @app.route("/user/verification", methods=["POST"])
-# def verify_user():
-#     if request.content_type != "application/json":
-#         return jsonify("Successful")
-       
+@app.route("/user/verification", methods=["POST"])
+def verify_user():
+    if request.content_type != "application/json":
+        return jsonify("Error: Data must be sent as JSON")
 
-#     post_data = request.get_json()
-#     username = post_data.get("username")
-#     password = post_data.get("password")
-    
-    # if stored_password is None:
-    #     return jsonify("User NOT Verified")
+    post_data = request.get_json()
+    username = post_data.get("username")
+    password = post_data.get("password")
 
-    # if valid_password_check == False:
-    #     return jsonify("User NOT Verified")
+    stored_password = db.session.query(User.password).filter(User.username == username).first()
 
-    # return jsonify("User Verified")
+    if stored_password is None:
+        return jsonify("User has no paossword Verified")
+
+    valid_password_check = bcrypt.check_password_hash(stored_password[0], password)
+
+    if valid_password_check == False:
+        return jsonify("User Passowrd Wrong Verified")
+
+    return jsonify("User Verified")
+
 
 if __name__ == "__main__":
     app.run(debug=True)
