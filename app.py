@@ -44,7 +44,7 @@ def create_user():
 
     username_check = db.session.query(User.username).filter(User.username == username).first()
     user_id = db.session.query(User.id).filter(User.username == username).first()
-    if username_check is not None:
+    if user_id is not None:
       return jsonify("Username Taken")
     else:
       hashed_password = bcrypt.generate_password_hash(password).decode("utf8")
